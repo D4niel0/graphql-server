@@ -1,4 +1,5 @@
-import { ApolloServer,gql } from "apollo-server";
+import { ApolloServer, UserInputError,gql } from "apollo-server";
+import {v1 as uuid} from 'uuid'
 // const { ApolloServer } = require('apollo-server');
 
 // Datos
@@ -62,6 +63,7 @@ const typeDefs = gql`
 // De donde sacar los datos
 
 const resolvers = {
+  // Query general con el conteo, todas las personas y encontrar una persona por nombre
   Query: {
     personCount: () => persons.length,
     allPersons: () => persons,
@@ -71,6 +73,20 @@ const resolvers = {
     },
 
   },
+  // Mutation para añadir una persona y generarle un id
+  Mutation: {
+    addPerson: (root, args) => {
+      if (persons.find(p => p.name === args.name)) {
+        throw new UserInputError('Name must be unique', {
+          invalidArgs: args.name
+        }) 
+      };
+      const person = { ...args, id: uuid() }
+      persons.push(person) // En este caso asi, pero en bbdd sería diferente
+      return person
+    }
+  },
+  // Modificar las personas para que tengan un campo address con la calle y la ciudad
   Person: {
     address: (root) => {
         return {
